@@ -1,0 +1,1 @@
+protoc -I /home/cloudera/Downloads/hbase-book-master/ch04/src/main/protobuf --java_out=/home/cloudera/Downloads/hbase-book-master/ch04/src/main/java /home/cloudera/Downloads/hbase-book-master/ch04/src/main/protobuf/RowCountService.proto
