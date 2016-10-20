@@ -43,11 +43,8 @@ object SparkEventProcessor {
 
   private val hbaseConfig: Configuration = HBaseConfiguration.create
   private val dao: SparkAwareHBaseEventDao = new SparkAwareHBaseEventDao(hbaseConfig)
-  private val checkpointDir: String = "/user/cloudera/result"
-
-  /*
-  spark-submit --master local[4] --class hbase.SparkEventProcessor target/hbase-task.jar
-   */
+  // change to yours <hdfs path>
+  private val checkpointDir: String = "/"
 
   def main(args: Array[String]) {
 
