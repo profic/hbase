@@ -18,16 +18,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class StatisticCoprocessorTest extends AbstractTest {
 
-    @Before
-    public void before() throws Exception {
-        truncateTable();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        truncateTable();
-    }
-
     @Test
     public void shouldInsertCorrectAvg() throws Exception {
 
@@ -140,16 +130,6 @@ public class StatisticCoprocessorTest extends AbstractTest {
             long countVal = getValue(result, count);
 
             assertEquals(3, countVal);
-        }
-    }
-
-    private static void truncateTable() throws IOException {
-        Configuration conf = HBaseConfiguration.create();
-
-        try (Connection connection = ConnectionFactory.createConnection(conf);
-             Admin admin = connection.getAdmin()) {
-            admin.disableTable(tableName);
-            admin.truncateTable(tableName, false);
         }
     }
 
