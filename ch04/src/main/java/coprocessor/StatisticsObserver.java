@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ObserverStatisticsEndpoint extends BaseRegionObserver {
+public class StatisticsObserver extends BaseRegionObserver {
 
     private static final byte[] dataColF = Bytes.toBytes("data");
     private static final byte[] lastValueCol = Bytes.toBytes("last_value");
