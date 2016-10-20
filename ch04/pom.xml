@@ -27,27 +27,33 @@
     <jdkLevel>1.7</jdkLevel>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-
     <jar.finalName>${project.name}</jar.finalName>
+    <hbase.version>1.2.0-cdh5.8.0</hbase.version>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>cloudera</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+  </repositories>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
-      <version>1.2.3</version>
+      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
-      <version>1.2.0-cdh5.8.0</version>
+      <version>${hbase.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-server</artifactId>
-      <version>1.2.0-cdh5.8.0</version>
+      <version>${hbase.version}</version>
     </dependency>
 
   </dependencies>
