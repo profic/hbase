@@ -5,53 +5,24 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
-import util.HBaseHelper;
 
 import java.io.IOException;
 
 public class ObserverStatisticsExample {
 
   /*
-  mvn clean install
-
 mvn clean
-mvn -Djar.finalName=16 install
+mvn -Djar.finalName=31 install
 
-sudo -u hdfs hadoop fs -rm /16.jar
-sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/16.jar /
+sudo -u hdfs hadoop fs -rm /31.jar
+sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/31.jar /
 
 
 disable 'stats'
 drop 'stats'
 create 'stats', 'data'
-alter 'stats', 'Coprocessor' => '/16.jar|coprocessor.ObserverStatisticsEndpoint|'
+alter 'stats', 'Coprocessor' => '/31.jar|coprocessor.ObserverStatisticsEndpoint|'
 
-
-disable 'testtable'
-drop 'testtable'
-create 'testtable', 'colfam1'
-alter 'testtable', 'Coprocessor' => '/4.jar|coprocessor.ObserverStatisticsEndpoint|'
-
-
-disable 'my'
-drop 'my'
-create 'my', 'stats'
-alter 'my', 'Coprocessor' => '/5.jar|coprocessor.ObserverStatisticsEndpoint|'
-
-disable 'testtable'
-drop 'testtable'
-create 'testtable', 'colfam1'
-alter 'testtable', 'Coprocessor' => '/5.jar|coprocessor.ObserverStatisticsEndpoint|'
-
-
-
-
-
-
-create 'testtable', 'colfam1', 'colfam2'
-put 'testtable', 'data1', 'colfam1:value', 'value1'
-
-get 'test', 'data1'
    */
     private static Table table = null;
 
