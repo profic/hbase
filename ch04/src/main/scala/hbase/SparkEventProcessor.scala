@@ -25,13 +25,12 @@ import hbase.domain.{Stat, StatisticsEntry}
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import org.apache.spark.{HashPartitioner, SparkConf}
 
-import scala.Seq
 import scala.annotation.switch
 import scala.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -50,32 +49,6 @@ object SparkEventProcessor {
   spark-submit --master local[4] --class hbase.SparkEventProcessor target/hbase-task.jar
    */
 
-  def remain(timestamp: Long): Boolean = true
-
-  val updateStatistic = (values: Seq[Long], state: Option[Stat]) => {
-    if (values.nonEmpty) {
-      val current = state.getOrElse(Stat())
-      current + values.sum
-      current.updated = true
-      Some(current)
-    } else {
-      state.flatMap(s => {
-        s.updated = false
-        Some(s)
-      })
-    }
-  }
-
-  def remain(t: (Long, Seq[Long], Option[Stat])): Boolean = t._3.getOrElse(Stat()).getCount < 5
-
-  val updateStatisticWithTimestamp = (it: Iterator[(Long, Seq[Long], Option[Stat])]) => {
-
-    it.filter(t => remain(t))
-    .map { case (timestamp, values, stat) =>
-      (timestamp, updateStatistic(values, stat).getOrElse(Stat()))
-    }
-  }
-
   def main(args: Array[String]) {
 
     val streamType = if (args.length == 0) "queue" else args(0)
@@ -90,7 +63,7 @@ object SparkEventProcessor {
 
     val eventsStream = subscribeToStream(streamType, ssc)
 
-    val results = eventsStream.updateStateByKey[Stat](updateStatisticWithTimestamp, new HashPartitioner(10), rememberPartitioner = true)
+    val results = eventsStream.updateStateByKey[Stat](updateStatistic)
                   .filter({ case (_, Stat(updated)) => updated })
 
     results foreachRDD {
@@ -153,5 +126,19 @@ object SparkEventProcessor {
       }
     }
     stream
+  }
+
+  val updateStatistic = (count: Seq[Long], state: Option[Stat]) => {
+    if (count.nonEmpty) {
+      val current = state.getOrElse(Stat())
+      current + count.sum
+      current.updated = true
+      Some(current)
+    } else {
+      state.flatMap(s => {
+        s.updated = false
+        Some(s)
+      })
+    }
   }
 }
