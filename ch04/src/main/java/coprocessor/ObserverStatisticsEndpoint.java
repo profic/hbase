@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("deprecation") // because of API usage
 public class ObserverStatisticsEndpoint extends BaseRegionObserver {
 
     private static final byte[] dataColF = Bytes.toBytes("data");
@@ -28,14 +27,15 @@ public class ObserverStatisticsEndpoint extends BaseRegionObserver {
     private static final byte[] max = Bytes.toBytes("max");
 
     @Override
-    public void prePut(
-            final ObserverContext<RegionCoprocessorEnvironment> e, final Put originalPut,
-            final WALEdit walEdit, final Durability durability) throws IOException {
+    public void prePut(final ObserverContext<RegionCoprocessorEnvironment> e,
+                       final Put originalPut,
+                       final WALEdit walEdit,
+                       final Durability durability) throws IOException {
 
         Region region = e.getEnvironment().getRegion();
 
         final byte[] row = originalPut.getRow();
-        region.processRowsWithLocks(new StatisticRowMutationProcessor(Collections.singletonList(row)) {
+        region.processRowsWithLocks(new MultipleRowMutationProcessor(Collections.singletonList(row)) {
 
             private long getValue(Result result, byte[] col) {
                 return Bytes.toLong(result.getValue(dataColF, col));

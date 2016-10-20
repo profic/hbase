@@ -19,11 +19,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public abstract class StatisticRowMutationProcessor extends BaseRowProcessor<Message, Message> {
+public abstract class MultipleRowMutationProcessor extends BaseRowProcessor<Message, Message> {
 
     private Collection<byte[]> rowsToLock;
 
-    public StatisticRowMutationProcessor(Collection<byte[]> rowsToLock) {
+    public MultipleRowMutationProcessor(Collection<byte[]> rowsToLock) {
         this.rowsToLock = rowsToLock;
     }
 
@@ -79,7 +79,7 @@ public abstract class StatisticRowMutationProcessor extends BaseRowProcessor<Mes
 
 
     @Override
-    public MultiRowMutationProcessorRequest getRequestData() {
+    public Message getRequestData() {
         return null;
     }
 
