@@ -45,47 +45,64 @@ public class ObserverStatisticsEndpoint extends BaseRegionObserver {
             protected List<Mutation> doProcess(HRegion region) throws IOException {
                 List<Mutation> mutations = new ArrayList<>();
 
-                Put newPut = new Put(row);
-
                 List<Cell> originalPutCells = originalPut.get(dataColF, lastValueCol);
 
                 if (!originalPutCells.isEmpty()) {
                     long originalValue = Bytes.toLong(CellUtil.cloneValue(originalPutCells.get(0)));
                     byte[] originalValueBytes = Bytes.toBytes(originalValue);
 
-                    Get get = new Get(row);
-                    get.addColumn(dataColF, count);
-                    get.addColumn(dataColF, min);
-                    get.addColumn(dataColF, max);
-                    get.addColumn(dataColF, avg);
+                    long newCountVal;
+                    double avgVal;
 
-                    Result result = region.get(get);
+                    Result result = getPreviousValue(region, row);
+
                     if (!result.isEmpty()) {
                         long countVal = getValue(result, count);
                         long minVal = getValue(result, min);
                         long maxVal = getValue(result, max);
-                        long avgVal = getValue(result, avg);
+
+                        avgVal = Bytes.toDouble(result.getValue(dataColF, avg));
 
                         if (originalValue < minVal) {
-                            newPut.addColumn(dataColF, min, originalValueBytes);
+                            originalPut.addColumn(dataColF, min, originalValueBytes);
                         } else if (originalValue > maxVal) {
-                            newPut.addColumn(dataColF, max, originalValueBytes);
+                            originalPut.addColumn(dataColF, max, originalValueBytes);
                         }
-                        newPut.addColumn(dataColF, count, Bytes.toBytes(countVal + 1));
-                        newPut.addColumn(dataColF, avg, Bytes.toBytes(originalValue + avgVal));
+                        newCountVal = countVal + 1;
                     } else {
-                        newPut.addColumn(dataColF, min, originalValueBytes);
-                        newPut.addColumn(dataColF, max, originalValueBytes);
-                        newPut.addColumn(dataColF, count, Bytes.toBytes(1L));
-                        newPut.addColumn(dataColF, avg, Bytes.toBytes(originalValue));
+                        avgVal = originalValue;
+                        newCountVal = 1L;
+
+                        originalPut.addColumn(dataColF, min, originalValueBytes);
+                        originalPut.addColumn(dataColF, max, originalValueBytes);
                     }
 
-                    mutations.add(newPut);
+                    double calculatedAvg = calculateAvg(avgVal, originalValue, newCountVal);
+
+                    originalPut.addColumn(dataColF, count, Bytes.toBytes(newCountVal));
+                    originalPut.addColumn(dataColF, avg, Bytes.toBytes(calculatedAvg));
+
+                    mutations.add(originalPut);
 
                     e.bypass();
                 }
                 return mutations;
             }
         });
+    }
+
+    private Result getPreviousValue(HRegion region, byte[] row) throws IOException {
+        Get get = new Get(row);
+        get.addColumn(dataColF, count);
+        get.addColumn(dataColF, min);
+        get.addColumn(dataColF, max);
+        get.addColumn(dataColF, avg);
+        return region.get(get);
+    }
+
+    private static double calculateAvg(double avg, double newValue, long count) {
+        avg -= avg / count;
+        avg += newValue / count;
+        return avg;
     }
 }

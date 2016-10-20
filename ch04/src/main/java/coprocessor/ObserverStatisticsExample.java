@@ -1,42 +1,30 @@
 package coprocessor;
 
-import java.io.IOException;
-import java.util.*;
-
-import coprocessor.generated.ObserverStatisticsProtos;
-import coprocessor.generated.ObserverStatisticsProtos.NameInt32Pair;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.*;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.client.coprocessor.Batch;
-import org.apache.hadoop.hbase.filter.CompareFilter;
-import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.util.Bytes;
-
 import util.HBaseHelper;
 
-import static coprocessor.generated.ObserverStatisticsProtos.*;
+import java.io.IOException;
 
-// cc ObserverStatisticsExample Use an endpoint to query observer statistics
 public class ObserverStatisticsExample {
-
-    // vv ObserverStatisticsExample
-    private static Table table = null;
 
   /*
   mvn clean install
 
 mvn clean
-mvn -Djar.finalName=11 install
+mvn -Djar.finalName=16 install
 
-sudo -u hdfs hadoop fs -rm /11.jar
-sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/11.jar /
+sudo -u hdfs hadoop fs -rm /16.jar
+sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/16.jar /
 
 
 disable 'stats'
 drop 'stats'
 create 'stats', 'data'
-alter 'stats', 'Coprocessor' => '/11.jar|coprocessor.ObserverStatisticsEndpoint|'
+alter 'stats', 'Coprocessor' => '/16.jar|coprocessor.ObserverStatisticsEndpoint|'
 
 
 disable 'testtable'
@@ -65,6 +53,7 @@ put 'testtable', 'data1', 'colfam1:value', 'value1'
 
 get 'test', 'data1'
    */
+    private static Table table = null;
 
     private static final byte[] dataColF = Bytes.toBytes("data");
 
@@ -76,7 +65,6 @@ get 'test', 'data1'
 
         Configuration conf = HBaseConfiguration.create();
         Connection connection = ConnectionFactory.createConnection(conf);
-        HBaseHelper helper = HBaseHelper.getHelper(conf);
 
         try {
 
@@ -88,7 +76,7 @@ get 'test', 'data1'
 
             byte[] row = Bytes.toBytes(1L);
 
-            getAndPringRows(row);
+//            getAndPringRows(row);
 
             Put p1 = new Put(row);
             byte[] value = Bytes.toBytes("last_value");
@@ -132,7 +120,7 @@ get 'test', 'data1'
         long countVal = getValue(result, count);
         long minVal = getValue(result, min);
         long maxVal = getValue(result, max);
-        long avgVal = getValue(result, avg);
+        double avgVal = Bytes.toDouble(result.getValue(dataColF, avg));
 
         System.out.println("countVal = " + countVal);
         System.out.println("minVal = " + minVal);
