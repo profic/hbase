@@ -1,4 +1,4 @@
-package coprocessor;
+package hbase;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;

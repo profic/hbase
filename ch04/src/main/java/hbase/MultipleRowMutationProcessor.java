@@ -1,4 +1,4 @@
-package coprocessor;
+package hbase;
 
 
 import com.google.protobuf.Message;
@@ -8,7 +8,6 @@ import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.protobuf.generated.MultiRowMutationProtos.MultiRowMutationProcessorRequest;
 import org.apache.hadoop.hbase.regionserver.BaseRowProcessor;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.wal.WALEdit;
