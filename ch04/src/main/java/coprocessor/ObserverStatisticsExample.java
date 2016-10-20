@@ -1,10 +1,7 @@
 package coprocessor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import coprocessor.generated.ObserverStatisticsProtos;
 import coprocessor.generated.ObserverStatisticsProtos.NameInt32Pair;
@@ -65,16 +62,22 @@ public class ObserverStatisticsExample {
   mvn clean install
 
 mvn clean
-mvn -Djar.finalName=3 install
+mvn -Djar.finalName=10 install
 
-sudo -u hdfs hadoop fs -rm /3.jar
-sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/3.jar /
+sudo -u hdfs hadoop fs -rm /10.jar
+sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/10.jar /
+
+
+disable 'stats'
+drop 'stats'
+create 'stats', 'data'
+alter 'stats', 'Coprocessor' => '/10.jar|coprocessor.ObserverStatisticsEndpoint|'
 
 
 disable 'testtable'
 drop 'testtable'
 create 'testtable', 'colfam1'
-alter 'testtable', 'Coprocessor' => '/3.jar|coprocessor.ObserverStatisticsEndpoint|'
+alter 'testtable', 'Coprocessor' => '/4.jar|coprocessor.ObserverStatisticsEndpoint|'
 
 
 disable 'my'
@@ -98,6 +101,12 @@ put 'testtable', 'data1', 'colfam1:value', 'value1'
 get 'test', 'data1'
    */
 
+    private static final byte[] dataColF = Bytes.toBytes("data");
+
+    private static long getValue(Result result, byte[] col) {
+        return Bytes.toLong(result.getValue(dataColF, col));
+    }
+
     public static void main(String[] args) throws IOException {
 
         Configuration conf = HBaseConfiguration.create();
@@ -117,33 +126,49 @@ get 'test', 'data1'
             table = connection.getTable(tableName);
 
             byte[] row = Bytes.toBytes(1L);
+
             Get get = new Get(row);
-            get.addColumn(colf, count);
-            get.addColumn(colf, min);
-            get.addColumn(colf, max);
-            get.addColumn(colf, avg);
+            get.addColumn(dataColF, count);
+            get.addColumn(dataColF, min);
+            get.addColumn(dataColF, max);
+            get.addColumn(dataColF, avg);
 
             Result result = table.get(get);
+
+            long countVal = getValue(result, count);
+            long minVal = getValue(result, min);
+            long maxVal = getValue(result, max);
+            long avgVal = getValue(result, avg);
+
+            System.out.println();
 
 //            int countVal = Bytes.toInt(result.getValue(colf, count));
 //            int minVal = Bytes.toInt(result.getValue(colf, min));
 //            int maxVal = Bytes.toInt(result.getValue(colf, max));
 //            int avgVal = Bytes.toInt(result.getValue(colf, avg));
-
-            System.out.println();
+//
+//
+//
+//            Iterator<Result> it = table.getScanner(colf).iterator();
+//            List<Result> list = new ArrayList<>();
+//            while (it.hasNext()) {
+//                list.add(it.next());
+//            }
+//
+//            System.out.println(Bytes.toLong(CellUtil.cloneValue(list.get(0).getColumnCells(colf, count).get(0))));
 
 
             Put p1 = new Put(row);
             byte[] value = Bytes.toBytes("last_value");
 
-            p1.addColumn(colf, value, Bytes.toBytes(20));
+            p1.addColumn(colf, value, Bytes.toBytes(20L));
 
 
             Put p2 = new Put(row);
-            p2.addColumn(colf, value, Bytes.toBytes(30));
+            p2.addColumn(colf, value, Bytes.toBytes(30L));
 
             Put p3 = new Put(row);
-            p3.addColumn(colf, value, Bytes.toBytes(5));
+            p3.addColumn(colf, value, Bytes.toBytes(5L));
 
 
             table.put(p1);

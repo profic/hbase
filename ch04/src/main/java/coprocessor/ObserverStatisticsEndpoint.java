@@ -45,12 +45,18 @@ import org.apache.hadoop.hbase.wal.WALKey;
 
 import coprocessor.generated.ObserverStatisticsProtos;
 
-// cc ObserverStatisticsEndpoint Observer collecting invocation statistics.
-// vv ObserverStatisticsEndpoint
 @SuppressWarnings("deprecation") // because of API usage
 public class ObserverStatisticsEndpoint
         extends ObserverStatisticsProtos.ObserverStatisticsService
         implements Coprocessor, CoprocessorService, RegionObserver {
+
+    private static final byte[] dataColF = Bytes.toBytes("data");
+    private static final byte[] lastValueCol = Bytes.toBytes("last_value");
+
+    private static final byte[] count = Bytes.toBytes("count");
+    private static final byte[] avg = Bytes.toBytes("avg");
+    private static final byte[] min = Bytes.toBytes("min");
+    private static final byte[] max = Bytes.toBytes("max");
 
     private RegionCoprocessorEnvironment env;
     private Map<String, Integer> stats = new LinkedHashMap<>();
@@ -383,18 +389,13 @@ public class ObserverStatisticsEndpoint
         try {
             Region region = e.getEnvironment().getRegion();
 
-            final byte[] colf = Bytes.toBytes("data");
-            final byte[] col = Bytes.toBytes("last_value");
-
             final byte[] row = originalPut.getRow();
-
-            final byte[] count = Bytes.toBytes("count");
-            final byte[] avg = Bytes.toBytes("avg");
-            final byte[] min = Bytes.toBytes("min");
-            final byte[] max = Bytes.toBytes("max");
-
-
             region.processRowsWithLocks(new StatisticRowMutationProcessor(Collections.singletonList(row)) {
+
+                private long getValue(Result result, byte[] col) {
+                    return Bytes.toLong(result.getValue(dataColF, col));
+                }
+
                 @Override
                 public void process(long now,
                                     HRegion region,
@@ -402,43 +403,8 @@ public class ObserverStatisticsEndpoint
                                     WALEdit walEdit) throws IOException {
                     byte[] byteNow = Bytes.toBytes(now);
 
-                    Put newPut = new Put(row);
+                    List<Mutation> mutations = doProcess(region);
 
-                    int originalValue = Bytes.toInt(CellUtil.cloneValue(originalPut.get(colf, col).get(0)));
-                    byte[] originalValueBytes = Bytes.toBytes(originalValue);
-
-                    Get get = new Get(row);
-                    get.addColumn(colf, count);
-                    get.addColumn(colf, min);
-                    get.addColumn(colf, max);
-                    get.addColumn(colf, avg);
-
-                    Result result = region.get(get);
-                    if (!result.isEmpty()) {
-                        int countVal = Bytes.toInt(result.getValue(colf, count));
-                        int minVal = Bytes.toInt(result.getValue(colf, min));
-                        int maxVal = Bytes.toInt(result.getValue(colf, max));
-                        int avgVal = Bytes.toInt(result.getValue(colf, avg));
-
-                        if (originalValue < minVal) {
-                            newPut.addColumn(colf, min, originalValueBytes);
-                        } else if (originalValue > maxVal) {
-                            newPut.addColumn(colf, max, originalValueBytes);
-                        }
-                        newPut.addColumn(colf, count, Bytes.toBytes(countVal + 1));
-                        newPut.addColumn(colf, avg, Bytes.toBytes(originalValue + avgVal));
-                    } else {
-                        newPut.addColumn(colf, min, originalValueBytes);
-                        newPut.addColumn(colf, max, originalValueBytes);
-                        newPut.addColumn(colf, count, Bytes.toBytes(1));
-                        newPut.addColumn(colf, avg, Bytes.toBytes(originalValue));
-                    }
-
-                    List<Mutation> mutations = new ArrayList<>();
-
-                    mutations.add(newPut);
-
-                    // Check mutations
                     for (Mutation m : mutations) {
                         if (m instanceof Put) {
                             Map<byte[], List<Cell>> familyMap = m.getFamilyCellMap();
@@ -454,7 +420,6 @@ public class ObserverStatisticsEndpoint
                                     + m.getClass().getName());
                         }
                         mutationsToApply.add(m);
-
                     }
                     for (Mutation m : mutations) {
                         for (List<Cell> cells : m.getFamilyCellMap().values()) {
@@ -464,10 +429,61 @@ public class ObserverStatisticsEndpoint
                             }
                         }
                     }
+
+                }
+
+                private List<Mutation> doProcess(HRegion region) throws IOException {
+                    List<Mutation> mutations = new ArrayList<>();
+
+                    Put newPut = new Put(row);
+
+                    List<Cell> originalPutCells = originalPut.get(dataColF, lastValueCol);
+
+                    if (!originalPutCells.isEmpty()) {
+                        long originalValue = Bytes.toLong(CellUtil.cloneValue(originalPutCells.get(0)));
+                        byte[] originalValueBytes = Bytes.toBytes(originalValue);
+                        addCallCount("originalValue was:" + originalValue);
+
+                        Get get = new Get(row);
+                        get.addColumn(dataColF, count);
+                        get.addColumn(dataColF, min);
+                        get.addColumn(dataColF, max);
+                        get.addColumn(dataColF, avg);
+
+                        Result result = region.get(get);
+                        addCallCount("result empty: " + result.isEmpty());
+                        if (!result.isEmpty()) {
+                            long countVal = getValue(result, count);
+                            long minVal = getValue(result, min);
+                            long maxVal = getValue(result, max);
+                            long avgVal = getValue(result, avg);
+
+                            addCallCount("count was:" + countVal);
+                            addCallCount("minVal was:" + minVal);
+                            addCallCount("maxVal was:" + maxVal);
+                            addCallCount("avgVal was:" + avgVal);
+
+                            if (originalValue < minVal) {
+                                newPut.addColumn(dataColF, min, originalValueBytes);
+                            } else if (originalValue > maxVal) {
+                                newPut.addColumn(dataColF, max, originalValueBytes);
+                            }
+                            newPut.addColumn(dataColF, count, Bytes.toBytes(countVal + 1));
+                            newPut.addColumn(dataColF, avg, Bytes.toBytes(originalValue + avgVal));
+                        } else {
+                            newPut.addColumn(dataColF, min, originalValueBytes);
+                            newPut.addColumn(dataColF, max, originalValueBytes);
+                            newPut.addColumn(dataColF, count, Bytes.toBytes(1L));
+                            newPut.addColumn(dataColF, avg, Bytes.toBytes(originalValue));
+                        }
+
+                        mutations.add(newPut);
+
+                        e.bypass();
+                    }
+                    return mutations;
                 }
             });
-
-            e.bypass();
 
         } catch (Exception ex) {
             writeEx(ex);
@@ -488,72 +504,7 @@ public class ObserverStatisticsEndpoint
         return p1;
     }
 
-    private void stats(ObserverContext<RegionCoprocessorEnvironment> e, final Put put) throws IOException {
-        String prePut = String.format("%s time pre put"/*, row: %s, value: %s"*/, c.incrementAndGet()/*, rowVal, value*/);
-
-        Region region = e.getEnvironment().getRegion();
-
-        final byte[] row = put.getRow();
-        final byte[] statsCF = Bytes.toBytes("stats");
-        final byte[] count = Bytes.toBytes("count");
-        final byte[] avg = Bytes.toBytes("avg");
-        final byte[] min = Bytes.toBytes("min");
-        final byte[] max = Bytes.toBytes("max");
-
-        region.processRowsWithLocks(new BaseRowProcessor<Message, Message>() {
-            public Collection<byte[]> getRowsToLock() {
-                return Collections.singletonList(row);
-            }
-
-            public Message getResult() {
-                return null;
-            }
-
-            public boolean readOnly() {
-                return false;
-            }
-
-            public void process(long now, HRegion region, List<Mutation> mutations, WALEdit walEdit) throws IOException {
-                Get get = new Get(row);
-                Result result = region.get(get);
-                long newValue = Bytes.toLong(put.getAttribute("newValue"));
-                Put newPut = new Put(row);
-
-                if (!result.isEmpty()) {
-                    long countVal = Bytes.toLong(result.getValue(statsCF, count));
-                    long avgVal = Bytes.toLong(result.getValue(statsCF, avg));
-                    long minVal = Bytes.toLong(result.getValue(statsCF, min));
-                    long maxVal = Bytes.toLong(result.getValue(statsCF, max));
-
-                    if (newValue < minVal) {
-                        newPut.addColumn(statsCF, min, Bytes.toBytes(newValue));
-                    } else if (newValue > maxVal) {
-                        newPut.addColumn(statsCF, max, Bytes.toBytes(newValue));
-                    }
-                    newPut.addColumn(statsCF, count, Bytes.toBytes(countVal + 1));
-                    newPut.addColumn(statsCF, avg, Bytes.toBytes(avgVal + newValue));
-                } else {
-                    newPut.addColumn(statsCF, count, Bytes.toBytes(1));
-                    newPut.addColumn(statsCF, max, Bytes.toBytes(newValue));
-                    newPut.addColumn(statsCF, min, Bytes.toBytes(newValue));
-                    newPut.addColumn(statsCF, avg, Bytes.toBytes(newValue));
-                }
-
-                mutations.add(newPut);
-            }
-
-            public Message getRequestData() throws IOException {
-                return null;
-            }
-
-            public void initialize(Message msg) throws IOException {
-            }
-        });
-
-        addCallCount(prePut);
-    }
-
-    @Override
+        @Override
     public void postPut(
             ObserverContext<RegionCoprocessorEnvironment> observerContext, Put put,
             WALEdit walEdit, Durability durability) throws IOException {
