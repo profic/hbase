@@ -62,16 +62,16 @@ public class ObserverStatisticsExample {
   mvn clean install
 
 mvn clean
-mvn -Djar.finalName=10 install
+mvn -Djar.finalName=11 install
 
-sudo -u hdfs hadoop fs -rm /10.jar
-sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/10.jar /
+sudo -u hdfs hadoop fs -rm /11.jar
+sudo -u hdfs hadoop fs -put /home/cloudera/Downloads/hbase-book-master/ch04/target/11.jar /
 
 
 disable 'stats'
 drop 'stats'
 create 'stats', 'data'
-alter 'stats', 'Coprocessor' => '/10.jar|coprocessor.ObserverStatisticsEndpoint|'
+alter 'stats', 'Coprocessor' => '/11.jar|coprocessor.ObserverStatisticsEndpoint|'
 
 
 disable 'testtable'

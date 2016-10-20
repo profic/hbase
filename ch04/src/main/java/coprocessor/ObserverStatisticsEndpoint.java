@@ -1,34 +1,15 @@
 package coprocessor;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.google.common.collect.ImmutableList;
-import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-
+import coprocessor.generated.ObserverStatisticsProtos;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.Append;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Durability;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Increment;
-import org.apache.hadoop.hbase.client.Mutation;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
-import org.apache.hadoop.hbase.coprocessor.ObserverContext;
-import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
-import org.apache.hadoop.hbase.coprocessor.RegionObserver;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.coprocessor.*;
 import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.io.FSDataInputStreamWrapper;
@@ -43,7 +24,11 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.wal.WALKey;
 
-import coprocessor.generated.ObserverStatisticsProtos;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("deprecation") // because of API usage
 public class ObserverStatisticsEndpoint
@@ -397,42 +382,7 @@ public class ObserverStatisticsEndpoint
                 }
 
                 @Override
-                public void process(long now,
-                                    HRegion region,
-                                    List<Mutation> mutationsToApply,
-                                    WALEdit walEdit) throws IOException {
-                    byte[] byteNow = Bytes.toBytes(now);
-
-                    List<Mutation> mutations = doProcess(region);
-
-                    for (Mutation m : mutations) {
-                        if (m instanceof Put) {
-                            Map<byte[], List<Cell>> familyMap = m.getFamilyCellMap();
-                            region.checkFamilies(familyMap.keySet());
-                            region.checkTimestamps(familyMap, now);
-                            region.updateCellTimestamps(familyMap.values(), byteNow);
-                        } else if (m instanceof Delete) {
-                            Delete d = (Delete) m;
-                            region.prepareDelete(d);
-                            region.prepareDeleteTimestamps(d, d.getFamilyCellMap(), byteNow);
-                        } else {
-                            throw new DoNotRetryIOException("Action must be Put or Delete. But was: "
-                                    + m.getClass().getName());
-                        }
-                        mutationsToApply.add(m);
-                    }
-                    for (Mutation m : mutations) {
-                        for (List<Cell> cells : m.getFamilyCellMap().values()) {
-                            boolean writeToWAL = m.getDurability() != Durability.SKIP_WAL;
-                            for (Cell cell : cells) {
-                                if (writeToWAL) walEdit.add(cell);
-                            }
-                        }
-                    }
-
-                }
-
-                private List<Mutation> doProcess(HRegion region) throws IOException {
+                protected List<Mutation> doProcess(HRegion region) throws IOException {
                     List<Mutation> mutations = new ArrayList<>();
 
                     Put newPut = new Put(row);
@@ -504,7 +454,7 @@ public class ObserverStatisticsEndpoint
         return p1;
     }
 
-        @Override
+    @Override
     public void postPut(
             ObserverContext<RegionCoprocessorEnvironment> observerContext, Put put,
             WALEdit walEdit, Durability durability) throws IOException {
