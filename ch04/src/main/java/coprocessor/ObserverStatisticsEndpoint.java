@@ -56,7 +56,13 @@ public class ObserverStatisticsEndpoint extends BaseRegionObserver {
 
                     Result result = getPreviousValue(region, row);
 
-                    if (!result.isEmpty()) {
+                    if (result.isEmpty()) {
+                        avgVal = originalValue;
+                        newCountVal = 1L;
+
+                        originalPut.addColumn(dataColF, min, originalValueBytes);
+                        originalPut.addColumn(dataColF, max, originalValueBytes);
+                    } else {
                         long countVal = getValue(result, count);
                         long minVal = getValue(result, min);
                         long maxVal = getValue(result, max);
@@ -69,12 +75,6 @@ public class ObserverStatisticsEndpoint extends BaseRegionObserver {
                             originalPut.addColumn(dataColF, max, originalValueBytes);
                         }
                         newCountVal = countVal + 1;
-                    } else {
-                        avgVal = originalValue;
-                        newCountVal = 1L;
-
-                        originalPut.addColumn(dataColF, min, originalValueBytes);
-                        originalPut.addColumn(dataColF, max, originalValueBytes);
                     }
 
                     double calculatedAvg = calculateAvg(avgVal, originalValue, newCountVal);
