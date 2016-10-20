@@ -3,7 +3,7 @@
  mvn clean
  mvn install -DskipTests=true
 
- It's important to skip test because it tests hbase with coprocessor,
+ It's important to skip tests because they expect hbase with coprocessor,
  which is not created and assigned yet.
 
 1) Implementation with coprocessor:
@@ -14,6 +14,7 @@
  alter 'stats', 'Coprocessor' => '/<hdfs path>/hbase-task.jar|hbase.coprocessor.StatisticsObserver|'
 
 See StatisticCoprocessorTest - it shows insert and get process
+See IntegrationTest - basic event processing and dao implementation
 
 2) Implementation with spark:
 

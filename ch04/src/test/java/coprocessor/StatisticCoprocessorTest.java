@@ -16,16 +16,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by cloudera on 10/20/16.
  */
-public class StatisticCoprocessorTest {
-
-    private static final byte[] dataColF = Bytes.toBytes("data");
-    private static final byte[] lastValueCol = Bytes.toBytes("last_value");
-    private static final byte[] count = Bytes.toBytes("count");
-    private static final byte[] avg = Bytes.toBytes("avg");
-    private static final byte[] min = Bytes.toBytes("min");
-    private static final byte[] max = Bytes.toBytes("max");
-
-    private static final TableName tableName = TableName.valueOf("stats");
+public class StatisticCoprocessorTest extends AbstractTest {
 
     @Before
     public void before() throws Exception {
@@ -150,20 +141,6 @@ public class StatisticCoprocessorTest {
 
             assertEquals(3, countVal);
         }
-    }
-
-    private Result getAllColumns(Table table, byte[] row) throws IOException {
-        Get get = new Get(row);
-        get.addColumn(dataColF, count);
-        get.addColumn(dataColF, min);
-        get.addColumn(dataColF, max);
-        get.addColumn(dataColF, avg);
-
-        return table.get(get);
-    }
-
-    private static long getValue(Result result, byte[] col) {
-        return Bytes.toLong(result.getValue(dataColF, col));
     }
 
     private static void truncateTable() throws IOException {
