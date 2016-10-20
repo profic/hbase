@@ -1,4 +1,4 @@
-package hbase;
+package hbase.service;
 
 import hbase.domain.Event;
 

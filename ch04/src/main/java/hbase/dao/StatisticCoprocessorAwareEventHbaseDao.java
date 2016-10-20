@@ -1,4 +1,4 @@
-package hbase;
+package hbase.dao;
 
 import hbase.domain.Event;
 import org.apache.commons.lang.time.DateUtils;
@@ -17,7 +17,7 @@ import java.util.Date;
 /**
  * Created by cloudera on 10/20/16.
  */
-public class EventProcessorImpl implements EventProcessor {
+public class StatisticCoprocessorAwareEventHbaseDao implements EventHbaseDao {
 
     private static final TableName tableName = TableName.valueOf("stats");
     private static final byte[] dataColF = Bytes.toBytes("data");
@@ -25,15 +25,14 @@ public class EventProcessorImpl implements EventProcessor {
 
     private final Configuration conf;
 
-    public EventProcessorImpl(Configuration conf) {
+    public StatisticCoprocessorAwareEventHbaseDao(Configuration conf) {
         this.conf = conf;
     }
 
     @Override
-    public void accept(Event event) throws IOException {
-        try (Connection connection = ConnectionFactory.createConnection(conf)) {
-
-            Table table = connection.getTable(tableName);
+    public void save(Event event) throws IOException {
+        try (Connection connection = ConnectionFactory.createConnection(conf);
+             Table table = connection.getTable(tableName)) {
 
             long time = DateUtils.truncate(new Date(event.getTimestamp()), Calendar.MINUTE).getTime();
 
@@ -44,4 +43,5 @@ public class EventProcessorImpl implements EventProcessor {
             table.put(put);
         }
     }
+
 }

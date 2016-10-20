@@ -41,8 +41,8 @@ public class StatisticCoprocessorTest {
     public void shouldInsertCorrectAvg() throws Exception {
 
         Configuration conf = HBaseConfiguration.create();
-        try (Connection connection = ConnectionFactory.createConnection(conf)) {
-            Table table = connection.getTable(tableName);
+        try (Connection connection = ConnectionFactory.createConnection(conf);
+             Table table = connection.getTable(tableName)) {
 
             byte[] row = Bytes.toBytes(1L);
 
@@ -71,8 +71,8 @@ public class StatisticCoprocessorTest {
     public void shouldInsertCorrectMax() throws Exception {
 
         Configuration conf = HBaseConfiguration.create();
-        try (Connection connection = ConnectionFactory.createConnection(conf)) {
-            Table table = connection.getTable(tableName);
+        try (Connection connection = ConnectionFactory.createConnection(conf);
+             Table table = connection.getTable(tableName)) {
 
             byte[] row = Bytes.toBytes(1L);
 
@@ -99,8 +99,8 @@ public class StatisticCoprocessorTest {
     public void shouldInsertCorrectMin() throws Exception {
 
         Configuration conf = HBaseConfiguration.create();
-        try (Connection connection = ConnectionFactory.createConnection(conf)) {
-            Table table = connection.getTable(tableName);
+        try (Connection connection = ConnectionFactory.createConnection(conf);
+             Table table = connection.getTable(tableName)) {
 
             byte[] row = Bytes.toBytes(1L);
 
@@ -127,8 +127,8 @@ public class StatisticCoprocessorTest {
     public void shouldReturnCorrectCount() throws Exception {
 
         Configuration conf = HBaseConfiguration.create();
-        try (Connection connection = ConnectionFactory.createConnection(conf)) {
-            Table table = connection.getTable(tableName);
+        try (Connection connection = ConnectionFactory.createConnection(conf);
+             Table table = connection.getTable(tableName)) {
 
             byte[] row = Bytes.toBytes(1L);
 
@@ -169,8 +169,8 @@ public class StatisticCoprocessorTest {
     private static void truncateTable() throws IOException {
         Configuration conf = HBaseConfiguration.create();
 
-        try (Connection connection = ConnectionFactory.createConnection(conf)) {
-            Admin admin = connection.getAdmin();
+        try (Connection connection = ConnectionFactory.createConnection(conf);
+             Admin admin = connection.getAdmin()) {
             admin.disableTable(tableName);
             admin.truncateTable(tableName, false);
         }

@@ -1,4 +1,4 @@
-package hbase;
+package hbase.coprocessor;
 
 
 import com.google.protobuf.Message;
