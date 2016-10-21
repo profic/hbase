@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-package hbase
-
-import org.apache.spark.Logging
+package hbase.util
 
 import org.apache.log4j.{Level, Logger}
+import org.apache.spark.Logging
 
 object LogHelper extends Logging {
 

@@ -9,6 +9,6 @@ import java.io.IOException;
  */
 public interface EventProcessor {
 
-    void accept(Event event) throws IOException;
+    void receive(Event event) throws IOException;
 
 }

@@ -17,7 +17,7 @@ public class EventProcessorImpl implements EventProcessor {
     }
 
     @Override
-    public void accept(Event event) throws IOException {
+    public void receive(Event event) throws IOException {
         eventHbaseDao.save(event);
     }
 }

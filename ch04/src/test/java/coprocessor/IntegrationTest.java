@@ -29,9 +29,9 @@ public class IntegrationTest extends AbstractTest {
 
         long rowKey = new Date().getTime();
 
-        eventProcessor.accept(new Event(rowKey, 2));
-        eventProcessor.accept(new Event(rowKey, 4));
-        eventProcessor.accept(new Event(rowKey, 9));
+        eventProcessor.receive(new Event(rowKey, 2));
+        eventProcessor.receive(new Event(rowKey, 4));
+        eventProcessor.receive(new Event(rowKey, 9));
 
         byte[] row = Bytes.toBytes(rowKey);
         Get get = new Get(row);
