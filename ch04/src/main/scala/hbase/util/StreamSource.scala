@@ -7,7 +7,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.annotation.switch
 import scala.collection.mutable
 import scala.concurrent.Future
