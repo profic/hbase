@@ -25,7 +25,7 @@ It will run random generation values.
 
 It's possible to send commands from server:
 - run 'nc -l localhost 9999' from terminal
-- run spark-submit --master local[4] --class hbase.StreamingEventProcessor target/hbase-task.jar network
+- run spark-submit --master local --class hbase.StreamingEventProcessor target/hbase-task.jar network
 - type in terminal tuples like '1 10', '1 20'
 
 Each 3 seconds (configurable, val emitInterval = Seconds(3) in StreamingEventProcessor)
