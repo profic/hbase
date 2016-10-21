@@ -1,6 +1,6 @@
 package hbase
 
-import hbase.dao.SparkAwareHBaseEventDao
+import hbase.dao.HBaseStatisticsDao
 import hbase.domain.{Stat, StatisticsEntity}
 import hbase.util.{LogHelper, StreamSource}
 import org.apache.hadoop.conf.Configuration
@@ -15,7 +15,7 @@ object StreamingEventProcessor extends Logging {
   LogHelper.setStreamingLogLevels()
 
   private val hbaseConfig: Configuration = HBaseConfiguration.create
-  private val dao: SparkAwareHBaseEventDao = new SparkAwareHBaseEventDao(hbaseConfig)
+  private val dao: HBaseStatisticsDao = new HBaseStatisticsDao(hbaseConfig)
   // change to yours <hdfs path>
   private val checkpointDir: String = "/"
 

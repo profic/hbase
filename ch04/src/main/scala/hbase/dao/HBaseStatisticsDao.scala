@@ -12,16 +12,16 @@ import org.apache.hadoop.hbase.util.Bytes
 /**
   * Created by cloudera on 10/21/16.
   */
-class SparkAwareHBaseEventDao(private val conf: Configuration) {
+class HBaseStatisticsDao(private val conf: Configuration) {
 
   import hbase.util.ARMManager._
 
-  private val tableName: TableName = TableName.valueOf("stats")
-  private val dataColF: Array[Byte] = Bytes.toBytes("data")
-  private val count: Array[Byte] = Bytes.toBytes("count")
-  private val avg: Array[Byte] = Bytes.toBytes("avg")
-  private val min: Array[Byte] = Bytes.toBytes("min")
-  private val max: Array[Byte] = Bytes.toBytes("max")
+  private val tableName = TableName.valueOf("stats")
+  private val dataColF = Bytes.toBytes("data")
+  private val count = Bytes.toBytes("count")
+  private val avg = Bytes.toBytes("avg")
+  private val min = Bytes.toBytes("min")
+  private val max = Bytes.toBytes("max")
 
   def save(event: StatisticsEntity): Either[Exception, Unit] = {
     cleanly(ConnectionFactory.createConnection(conf)) { connection =>
