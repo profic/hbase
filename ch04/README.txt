@@ -1,7 +1,6 @@
 0) Build:
 
- mvn clean
- mvn install -DskipTests=true
+ mvn clean install -DskipTests=true
 
  It's important to skip tests because they expect hbase with coprocessor,
  which is not created and assigned yet.

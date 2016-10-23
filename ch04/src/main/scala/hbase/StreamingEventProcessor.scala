@@ -34,14 +34,14 @@ object StreamingEventProcessor extends Logging {
     val eventsStream = StreamSource.subscribeToStream(streamType, ssc)
 
     val results = eventsStream.updateStateByKey[Stat](updateStatistic)
-                  .filter({ case (_, Stat(updated)) => updated })
+                  .filter({ case (_, Stat(updated)) ⇒ updated })
 
-    results foreachRDD { rdd =>
-      rdd.map(toEntity).foreach(e => {
+    results foreachRDD { rdd ⇒
+      rdd.map(toEntity).foreach(e ⇒ {
         dao.save(e) match {
-          case Left(ex) =>
+          case Left(ex) ⇒
             logDebug(s"Exception during save $e", ex)
-          case _        =>
+          case _        ⇒
         }
       })
     }
@@ -54,7 +54,7 @@ object StreamingEventProcessor extends Logging {
   }
 
   def toEntity(t: (Long, Stat)): StatisticsEntity = t match {
-    case (timestamp, stat) =>
+    case (timestamp, stat) ⇒
       StatisticsEntity(
         timestamp,
         stat.getCount,
@@ -64,14 +64,14 @@ object StreamingEventProcessor extends Logging {
       )
   }
 
-  val updateStatistic = (count: Seq[Long], state: Option[Stat]) => {
+  val updateStatistic = (count: Seq[Long], state: Option[Stat]) ⇒ {
     if (count.nonEmpty) {
       val current = state.getOrElse(Stat())
       current + count.sum
       current.updated = true
       Some(current)
     } else {
-      state.flatMap(s => {
+      state.flatMap(s ⇒ {
         s.updated = false
         Some(s)
       })
