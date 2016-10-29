@@ -15,7 +15,7 @@
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <jar.finalName>${project.name}</jar.finalName>
     <hbase.version>1.2.0-cdh5.8.0</hbase.version>
-    <hbase.version>1.2.0-cdh5.8.0</hbase.version>
+    <!--<hbase.version>1.2.0-cdh5.7.0</hbase.version>-->
 
 
     <spark-version>1.6.0-cdh5.8.2</spark-version>
@@ -79,12 +79,14 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
       <version>${hbase.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-server</artifactId>
       <version>${hbase.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- spark -->
